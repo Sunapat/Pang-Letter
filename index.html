@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pang Letter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+      
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #fff0f3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #viewer-mode {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        #tap-text {
+            color: #ff758f; 
+            margin-bottom: 40px;
+            font-weight: 500;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .envelope-wrapper {
+            position: relative;
+            width: 320px;
+            height: 200px;
+            cursor: pointer;
+        }
+        
+      
+        .envelope-back {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #ffccd5;
+            border-radius: 6px; 
+            box-shadow: 0 10px 20px rgba(255, 182, 193, 0.3);
+            z-index: 1; 
+        }
+
+        
+        .envelope-front {
+            position: absolute;
+            bottom: 0; left: 0; 
+            width: 0; height: 0;
+            border-left: 160px solid #ffb3c6; 
+            border-right: 160px solid #ffb3c6; 
+            border-bottom: 110px solid #ff8fa3; 
+            border-top: 90px solid transparent; 
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+            z-index: 4; 
+            pointer-events: none; 
+        }
+
+   
+        .envelope-top {
+            position: absolute;
+            top: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-top: 110px solid #ffe5ec;
+            border-bottom: 90px solid transparent;
+            transform-origin: top; 
+            z-index: 5; 
+            transition: transform 0.6s ease-in-out;
+            pointer-events: none;
+        }
+        
+   
+        .letter {
+            position: absolute;
+            top: 15px; left: 15px; right: 15px;
+            height: 170px;
+            background: #ffffff; 
+            border-radius: 8px;
+            z-index: 2; 
+            transition: transform 0.7s ease-in-out,
+                        height 0.6s ease-in-out,
+                        top 0.6s ease-in-out,
+                        left 0.6s ease-in-out,
+                        right 0.6s ease-in-out; 
+            padding: 20px;
+            box-sizing: border-box;
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06); 
+        }
+        
+     
+        .envelope-wrapper.open .envelope-top {
+            transform: rotateX(180deg);
+            z-index: 1; 
+        }
+
+        .envelope-wrapper.pull-out .letter {
+            transform: translateY(-220px) rotate(-3deg);
+        }
+
+
+        .envelope-wrapper.bring-front .letter {
+            z-index: 10;
+        }
+
+  
+        .envelope-wrapper.cover .letter {
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            height: 240px;
+            z-index: 10;
+            box-shadow: 0 8px 24px rgba(255, 143, 163, 0.25);
+        }
+
+        
+        .envelope-wrapper.unfold .letter {
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            height: 300px; 
+            transform: translateY(-90px); 
+            z-index: 10;
+        }
+
+      
+        .letter-to {
+            position: absolute;
+            top: 18px;
+            left: 22px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #ff758f;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .cover-hint {
+            position: absolute;
+            bottom: 16px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .cover-hint .hint-text {
+            margin-top: 0;
+        }
+
+        
+        .letter-content {
+            width: 100%;
+            text-align: center;
+            font-size: 18px;
+            color: #555555;
+            white-space: pre-wrap;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            cursor: pointer;
+            user-select: none;
+            transform: translateY(0px);
+            line-height: 1.6;
+        }
+        
+        .hint-text {
+            font-size: 13px;
+            color: #ff758f;
+            margin-top: 20px;
+            display: block;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+       
+        .buttons {
+            position: absolute;
+            bottom: 55px; 
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        button {
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Kanit', sans-serif;
+            color: white;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+    
+        .btn-yes { 
+            background-color: #ff85a1; 
+            box-shadow: 0 4px 0 #ff4d6d; 
+        }
+        .btn-yes:hover { 
+            background-color: #ff6b8b; 
+            transform: translateY(2px); 
+            box-shadow: 0 2px 0 #ff4d6d; 
+        }
+        
+     
+        .btn-no { 
+            background-color: #e2ece9; 
+            color: #8390fa; 
+            box-shadow: 0 4px 0 #b5c4df; 
+            position: relative; 
+            transition: transform 0.2s ease-out; 
+        }
+        
+        
+        
+        .letter-decor {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out;
+        }
+        .letter-decor.show {
+            opacity: 1;
+        }
+
+        .bow {
+            position: absolute;
+            overflow: visible;
+            filter: drop-shadow(0 3px 4px rgba(200, 120, 145, 0.3));
+        }
+    
+        .bow path, .bow rect {
+            vector-effect: non-scaling-stroke;
+        }
+
+    
+        .bow.corner { width: 66px; height: 63px; }
+        .bow.tl { top: -20px; left: -18px; transform: rotate(-14deg); }
+        .bow.tr { top: -20px; right: -18px; transform: rotate(14deg); }
+
+   
+        .yes-wrap {
+            position: relative;
+            display: flex;
+        }
+        .yes-wrap::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            bottom: -8px;
+            left: -12px;
+            right: -12px;
+            border-radius: 40px;
+            background: #ffb3ca;
+            filter: blur(14px);
+            opacity: 0.6;
+            z-index: -1;
+            pointer-events: none;
+            animation: glowPulse 2.2s ease-in-out infinite;
+        }
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50%      { opacity: 1;   transform: scale(1.18); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .yes-wrap::before { animation: none; opacity: 0.8; }
+        }
+
+        .hearts {
+            position: absolute;
+            top: -50px;
+            font-size: 35px;
+            animation: fall linear infinite;
+            pointer-events: none;
+            z-index: 999;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(360deg); }
+        }
+
+        .fall-heart {
+            display: block;
+            width: 100%;
+            filter: drop-shadow(0 4px 6px rgba(240, 104, 143, 0.35));
+        }
+
+    
+        .love-heart {
+            display: block;
+            width: 120px;
+            margin: 0 auto 14px;
+            filter: drop-shadow(0 10px 14px rgba(240, 104, 143, 0.45));
+            animation: heartbeat 1.4s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            15%      { transform: scale(1.1); }
+            30%      { transform: scale(1); }
+            45%      { transform: scale(1.06); }
+        }
+
+        /* ===== ปุ่มเปิด/ปิดเพลง (มุมขวาบน) ===== */
+        #music-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 18px;
+            background-color: #ff85a1;
+            box-shadow: 0 3px 0 #ff4d6d;
+            z-index: 1000;
+        }
+        #music-btn.off {
+            opacity: 0.45;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bgm" src="SomebodysPleasure.FLAC" loop preload="auto"></audio>
+    <button id="music-btn" onclick="toggleMusic()" aria-label="Play/Pause Music">♪</button>
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs>
+            <radialGradient id="heartGrad" cx="35%" cy="28%" r="85%">
+                <stop offset="0%"  stop-color="#ffd9e3"/>
+                <stop offset="45%" stop-color="#ffa3ba"/>
+                <stop offset="100%" stop-color="#f0688f"/>
+            </radialGradient>
+            <filter id="heartSoft"><feGaussianBlur stdDeviation="4"/></filter>
+        </defs>
+    </svg>
+
+    <div id="viewer-mode">
+        <h3 id="tap-text">Please click to open</h3>
+        
+        <div class="envelope-wrapper" id="envelope-wrapper" onclick="openLetterFlow()">
+            <div class="envelope-back"></div>
+            
+            <div class="letter">
+                <div class="letter-to" id="letter-to">To: Pang</div>
+                <div class="cover-hint" id="cover-hint"><span class="hint-text">( Please click )</span></div>
+
+                <div class="letter-decor" id="letter-decor"></div>
+
+                <div class="letter-content" id="letter-text" onclick="nextMessage(event)"></div>
+                
+                <div class="buttons" id="action-buttons" style="display: none; opacity: 0; transition: opacity 0.5s;">
+                    <span class="yes-wrap"><button class="btn-yes" onclick="acceptLove(event)">ได้สิ</button></span>
+                    <button class="btn-no" id="btn-no" onmouseover="dodge(event)" ontouchstart="dodge(event)">ไม่ได้</button>
+                </div>
+            </div>
+            
+            <div class="envelope-front"></div>
+            <div class="envelope-top"></div>
+        </div>
+    </div>
+
+    
+    <script>
+        const storyMessages = [
+            "ผมดูซีรีส์มาเยอะนะ\nแต่กลับไม่เชื่อเรื่องรักแรกพบเลย\n<span class='hint-text'>( Please click )</span>",
+            "เพราะที่ผ่านมา\n<span class='hint-text'>( Please click )</span>",
+            "รักไม่ค่อยจะยุ่ง\nมุ่งเเต่จะทํางานมาตลอด\n<span class='hint-text'>( Please click )</span>",
+            "จนมาวันนึง...\n<span class='hint-text'>( Please click )</span>",
+            "บังเอิญเจอคุณ\nหลายครั้งมากก\nเเบบ ก ล้านตัวเลยละ\n<span class='hint-text'>( Please click )</span>",
+            "เลยใช้ความกล้าทั้งหมดในชีวิต\nเข้าไปคุย และขอไอจีกับคุณ\nเป็นครั้งเเรก\n<span class='hint-text'>( Please click )</span>",
+            "นี่เป็นเหตุผลที่ว่า...\n<span class='hint-text'>( Please click )</span>",
+            "ผมเริ่มที่จะเชื่อคำนั้นขึ้นมาละ\n<span class='hint-text'>( Please click )</span>",
+            "ก่อนอื่นเลย\n<span class='hint-text'>( Please click )</span>",
+            "ผมขอรับรองก่อนอย่างนึง\n<span class='hint-text'>( Please click )</span>",
+            "ถึงผมจะไม่ใช่หมอก็จริง\nแต่ขอรับรองว่า\n<span class='hint-text'>( Please click )</span>",
+            "จะดูแลหัวใจคุณเป็นอย่างดี\nแน่นอนคับบ\n<span class='hint-text'>( Please click )</span>",
+            "เรามาลองคุยกันนะ"
+        ];
+        
+        let currentStep = 0;
+        let isAnimating = false;
+
+
+        let stage = 0;
+
+   
+        function makeHeart(cls) {
+            return `
+<svg class="${cls}" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+  <path d="M100 172 C 22 116, 2 74, 2 48 C 2 20, 24 3, 52 3 C 74 3, 91 14, 100 32 C 109 14, 126 3, 148 3 C 176 3, 198 20, 198 48 C 198 74, 178 116, 100 172 Z"
+        fill="url(#heartGrad)" stroke="#ff8aa8" stroke-width="1.5"/>
+  <ellipse cx="60" cy="42" rx="24" ry="12" fill="#ffffff" opacity="0.6"
+           transform="rotate(-35 60 42)" filter="url(#heartSoft)"/>
+</svg>`;
+        }
+
+        const heartSVG = makeHeart('love-heart');
+
+        
+        function makeBow(cls) {
+            return `
+<svg class="bow ${cls}" viewBox="0 0 190 180" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#f5bccd" stroke="#b0808f" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M82 82 C66 96 44 116 24 140 C18 146 12 150 11 151 C22 160 40 170 59 178 C72 158 85 130 88 112 C89 100 90 90 90 84 Z"/>
+    <path d="M108 82 C124 96 146 116 166 140 C172 146 178 150 179 151 C168 160 150 170 131 178 C118 158 105 130 102 112 C101 100 100 90 100 84 Z"/>
+    <path d="M79 54 C70 40 58 20 46.5 3 C22 8 3 30 1.5 57 C1 68 4 78 9.3 87 C30 91 60 85 82 81 Z"/>
+    <path d="M111 54 C120 40 132 20 143.5 3 C168 8 187 30 188.5 57 C189 68 186 78 180.7 87 C160 91 130 85 108 81 Z"/>
+    <rect x="78" y="54" width="34" height="28" rx="7"/>
+  </g>
+  <g fill="none" stroke="#b0808f" stroke-width="0.9" stroke-linecap="round" opacity="0.8">
+    <path d="M53 5 C64 18 72 34 78 50"/>
+    <path d="M137 5 C126 18 118 34 112 50"/>
+    <path d="M8 84 C30 79 60 79 80 78"/>
+    <path d="M182 84 C160 79 130 79 110 78"/>
+    <path d="M64 46 L78 60"/>
+    <path d="M64 70 L78 71"/>
+    <path d="M66 78 L78 76"/>
+    <path d="M126 46 L112 60"/>
+    <path d="M126 70 L112 71"/>
+    <path d="M124 78 L112 76"/>
+  </g>
+</svg>`;
+        }
+
+        
+        document.getElementById('letter-decor').innerHTML =
+            makeBow('corner tl') + makeBow('corner tr');
+
+        function startMusic() {
+            const bgm = document.getElementById('bgm');
+            bgm.volume = 0.5;
+            const p = bgm.play();
+            if (p && p.catch) p.catch(() => {});
+            document.getElementById('music-btn').style.display = 'flex';
+        }
+
+        function toggleMusic() {
+            const bgm = document.getElementById('bgm');
+            const btn = document.getElementById('music-btn');
+            if (bgm.paused) {
+                const p = bgm.play();
+                if (p && p.catch) p.catch(() => {});
+                btn.classList.remove('off');
+            } else {
+                bgm.pause();
+                btn.classList.add('off');
+            }
+        }
+
+        function openLetterFlow() {
+            const wrapper = document.getElementById('envelope-wrapper');
+
+         
+            if (stage === 0) {
+                startMusic();
+                stage = -1;
+                wrapper.classList.add('open');
+                document.getElementById('tap-text').style.opacity = 0;
+
+                setTimeout(() => {
+                    wrapper.classList.add('pull-out');
+                }, 600);
+
+                setTimeout(() => {
+                    wrapper.classList.add('bring-front');
+                }, 1350);
+
+                setTimeout(() => {
+                    wrapper.classList.remove('pull-out');
+                    wrapper.classList.add('cover');
+                }, 1450);
+
+                setTimeout(() => {
+                    document.getElementById('cover-hint').style.opacity = 1;
+                    stage = 1;
+                }, 2200);
+                return;
+            }
+
+       
+            if (stage === 1) {
+                stage = -1;
+                document.getElementById('letter-to').style.opacity = 0;
+                document.getElementById('cover-hint').style.opacity = 0;
+
+                wrapper.classList.remove('cover');
+                wrapper.classList.add('unfold');
+
+                setTimeout(() => {
+                    const letterText = document.getElementById('letter-text');
+                    letterText.innerHTML = storyMessages[currentStep];
+                    letterText.style.opacity = 1;
+                    stage = 2;
+                }, 800);
+            }
+        }
+
+        function nextMessage(event) {
+            event.stopPropagation(); 
+
+            if (stage !== 2 || isAnimating || currentStep >= storyMessages.length - 1) return;
+            
+            isAnimating = true;
+            currentStep++;
+            const letterText = document.getElementById('letter-text');
+            
+            letterText.style.opacity = 0;
+
+            setTimeout(() => {
+                letterText.innerHTML = storyMessages[currentStep];
+                letterText.style.opacity = 1;
+                
+                if (currentStep === storyMessages.length - 1) {
+                    letterText.style.cursor = 'default';
+                    letterText.style.transform = 'translateY(-40px)';
+                    document.getElementById('letter-decor').classList.add('show');
+                    
+                    setTimeout(() => {
+                        const buttons = document.getElementById('action-buttons');
+                        buttons.style.display = 'flex';
+                        setTimeout(() => {
+                            buttons.style.opacity = 1;
+                            buttons.style.pointerEvents = 'auto';
+                        }, 50);
+                    }, 600);
+                }
+                isAnimating = false;
+            }, 500);
+        }
+
+        function dodge(event) {
+            event.stopPropagation(); 
+            if(event.type === 'touchstart') {
+                event.preventDefault();
+            }
+            const btnNo = document.getElementById('btn-no');
+            const randomX = Math.floor(Math.random() * 120) - 60; 
+            const randomY = Math.floor(Math.random() * -100) - 40;
+            btnNo.style.transform = `translate(${randomX}px, ${randomY}px)`;
+        }
+
+        function acceptLove(event) {
+            event.stopPropagation(); 
+            const letterText = document.getElementById('letter-text');
+            letterText.style.opacity = 0;
+            
+            setTimeout(() => {
+                letterText.style.transform = 'translateY(-10px)';
+                letterText.innerHTML = heartSVG +
+                    "<b>เย้! ดีใจที่สุดเลยยย\n<br><span style='font-size: 15px; font-weight: normal; color: #ff758f;'>ต่อไปนี้ผมจะดูแลหัวใจคุณ\nเป็นอย่างดีเลยคับบ!</span></b>";
+                letterText.style.opacity = 1;
+                document.getElementById('action-buttons').style.display = 'none';
+                createHearts();
+                document.getElementById('letter-decor').classList.remove('show');
+            }, 500);
+        }
+
+        function createHearts() {
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.classList.add('hearts');
+                    heart.innerHTML = makeHeart('fall-heart');
+                    heart.style.width = (Math.random() * 24 + 24) + 'px';
+                    heart.style.left = Math.random() * 100 + 'vw';
+                    heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
+                    document.body.appendChild(heart);
+                    
+                    setTimeout(() => { heart.remove(); }, 5000); 
+                }, i * 300);
+            }
+        }
+    </script>
+</body>
+</html>
